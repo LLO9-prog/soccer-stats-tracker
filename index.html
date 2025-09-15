@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>足球數據分析追蹤器 | Soccer Stats Tracker</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            background: linear-gradient(to right, #005c97, #00365a);
+            color: white;
+            padding: 1rem 0;
+            text-align: center;
+        }
+        nav {
+            background-color: #00365a;
+            padding: 0.5rem 0;
+        }
+        nav ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+        nav li {
+            margin: 0 15px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+        }
+        .league-section {
+            background-color: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .match-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .teams {
+            font-weight: bold;
+            flex-grow: 1;
+        }
+        .score {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 0 20px;
+            color: #005c97;
+        }
+        .stats {
+            font-size: 0.9em;
+            color: #666;
+        }
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            background-color: #00365a;
+            color: white;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>⚽ 足球數據分析追蹤器</h1>
+            <p>Soccer Stats Tracker</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="#">{{ currentDate }}</a></li>
+                <li><a href="#">英超</a></li>
+                <li><a href="#">西甲</a></li>
+                <li><a href="#">歐冠</a></li>
+                <!-- 更多聯賽 -->
+            </ul>
+        </nav>
+
+        <main class="container">
+            <!-- 聯賽區塊 - 我們會用 Vue 根據數據動態生成多個這樣的區塊 -->
+            <section class="league-section" v-for="league in leagues" :key="league.id">
+                <h2>{{ league.name }}</h2>
+
+                <!-- 比賽卡片 -->
+                <div class="match-card" v-for="match in league.matches" :key="match.id">
+                    <div class="teams">
+                        {{ match.homeTeam }} vs {{ match.awayTeam }}
+                    </div>
+                    <div class="score">{{ match.homeScore }} - {{ match.awayScore }}</div>
+                    <div class="stats">
+                        <div>射門: {{ match.stats.shots }}</div>
+                        <div>角球: {{ match.stats.corners }}</div>
+                        <div>控球率: {{ match.stats.possession }}%</div>
+                    </div>
+                    <button @click="viewMatchDetails(match)">詳細分析</button>
+                </div>
+            </section>
+
+            <section class="league-section">
+                <h2>開發日誌 (Development Log)</h2>
+                <p>🚧 系統正在積極開發中！以下是我們的進度：</p>
+                <ul>
+                    <li>✅ 專案倉庫建立完成</li>
+                    <li>✅ 靜態頁面框架 (HTML, CSS, Vue.js) 已就緒</li>
+                    <li>⏳ 下一階段：連接後端數據與即時更新功能</li>
+                    <li>⏳ 未來計劃：AI預測模型、戰術分析圖表</li>
+                </ul>
+                <p>感謝您的耐心等待，這將是一個從零開始打造的強大系統！</p>
+            </section>
+        </main>
+
+        <footer>
+            <p>© 2024 Soccer Stats Tracker. 本網站僅供個人項目與學習使用。</p>
+        </footer>
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue;
+
+        createApp({
+            setup() {
+                const currentDate = ref(new Date().toLocaleDateString('zh-TW'));
+                // 這是我們暫時的「假數據」，後續將被真實的後端 API 取代
+                const leagues = ref([
+                    {
+                        id: 1,
+                        name: '英格蘭超級聯賽',
+                        matches: [
+                            {
+                                id: 101,
+                                homeTeam: '曼城',
+                                awayTeam: '兵工廠',
+                                homeScore: 2,
+                                awayScore: 1,
+                                stats: { shots: 18, corners: 7, possession: 58 },
+                                details: null
+                            },
+                            {
+                                id: 102,
+                                homeTeam: '曼聯',
+                                awayTeam: '利物浦',
+                                homeScore: 0,
+                                awayScore: 0,
+                                stats: { shots: 22, corners: 10, possession: 45 },
+                                details: null
+                            }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        name: '西班牙甲級聯賽',
+                        matches: [
+                            {
+                                id: 201,
+                                homeTeam: '巴塞隆納',
+                                awayTeam: '皇家馬德里',
+                                homeScore: 3,
+                                awayScore: 2,
+                                stats: { shots: 25, corners: 9, possession: 62 },
+                                details: null
+                            }
+                        ]
+                    }
+                ]);
+
+                const viewMatchDetails = (match) => {
+                    // 將來這裡會跳轉到詳細比賽頁面
+                    alert(`即將為您顯示 ${match.homeTeam} vs ${match.awayTeam} 的詳細數據與分析！\n(此功能開發中)`);
+                };
+
+                return {
+                    currentDate,
+                    leagues,
+                    viewMatchDetails
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
