@@ -140,62 +140,64 @@
         const { createApp, ref } = Vue;
 
         createApp({
-            setup() {
-                const currentDate = ref(new Date().toLocaleDateString('zh-TW'));
-                // 這是我們暫時的「假數據」，後續將被真實的後端 API 取代
-                const leagues = ref([
-                    {
-                        id: 1,
-                        name: '英格蘭超級聯賽',
-                        matches: [
-                            {
-                                id: 101,
-                                homeTeam: '曼城',
-                                awayTeam: '兵工廠',
-                                homeScore: 2,
-                                awayScore: 1,
-                                stats: { shots: 18, corners: 7, possession: 58 },
-                                details: null
-                            },
-                            {
-                                id: 102,
-                                homeTeam: '曼聯',
-                                awayTeam: '利物浦',
-                                homeScore: 0,
-                                awayScore: 0,
-                                stats: { shots: 22, corners: 10, possession: 45 },
-                                details: null
-                            }
-                        ]
-                    },
-                    {
-                        id: 2,
-                        name: '西班牙甲級聯賽',
-                        matches: [
-                            {
-                                id: 201,
-                                homeTeam: '巴塞隆納',
-                                awayTeam: '皇家馬德里',
-                                homeScore: 3,
-                                awayScore: 2,
-                                stats: { shots: 25, corners: 9, possession: 62 },
-                                details: null
-                            }
-                        ]
-                    }
-                ]);
+            // 在 index.html 的 Vue 應用程序中替換 setup() 函數
 
-                const viewMatchDetails = (match) => {
-                    // 將來這裡會跳轉到詳細比賽頁面
-                    alert(`即將為您顯示 ${match.homeTeam} vs ${match.awayTeam} 的詳細數據與分析！\n(此功能開發中)`);
-                };
+setup() {
+    const currentDate = ref(new Date().toLocaleDateString('zh-TW'));
+    const leagues = ref([]); // 初始化為空數組，不再使用假數據
+    const isLoading = ref(true); // 添加一個加載狀態
 
-                return {
-                    currentDate,
-                    leagues,
-                    viewMatchDetails
-                };
-            }
+    // 這是一個將從API獲取的比賽數組，按聯賽名稱分組的函數
+    const groupMatchesByLeague = (matches) => {
+      const grouped = {};
+      matches.forEach(match => {
+        if (!grouped[match.league]) {
+          grouped[match.league] = [];
+        }
+        grouped[match.league].push(match);
+      });
+      return grouped;
+    };
+
+    // 關鍵：使用 fetch 從我們自己的 Netlify Function 獲取數據
+    const fetchMatchData = async () => {
+      isLoading.value = true;
+      try {
+        // 注意這個URL！在本機開發時可能是 http://localhost:8888/.netlify/functions/getMatches
+        // 部署後會變成 https://你的網站網址/.netlify/functions/getMatches
+        const response = await fetch('/.netlify/functions/getMatches');
+        const matchData = await response.json();
+
+        // 將獲取到的數據按聯賽分組，並轉換成前端需要的格式
+        const groupedData = groupMatchesByLeague(matchData);
+        leagues.value = Object.keys(groupedData).map(leagueName => ({
+          id: leagueName,
+          name: leagueName,
+          matches: groupedData[leagueName]
+        }));
+
+      } catch (error) {
+        console.error('獲取數據失敗:', error);
+        alert('獲取比賽數據時發生錯誤，請稍後再試。');
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    // 組件掛載時立即獲取數據
+    fetchMatchData();
+
+    const viewMatchDetails = (match) => {
+      alert(`即將為您顯示 ${match.homeTeam} vs ${match.awayTeam} 的詳細數據與分析！\n(此功能開發中)`);
+    };
+
+    return {
+      currentDate,
+      leagues,
+      isLoading,
+      viewMatchDetails
+    };
+}
         }).mount('#app');
     </script>
 </body>
