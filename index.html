@@ -11,87 +11,368 @@
             font-family: 'Microsoft JhengHei', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2c3e50;
+            line-height: 1.6;
+            min-height: 100vh;
         }
+        
         .container {
             width: 90%;
             max-width: 1200px;
             margin: 0 auto;
+            padding: 20px 0;
         }
+        
         header {
-            background: linear-gradient(to right, #005c97, #00365a);
+            background: linear-gradient(135deg, #005c97 0%, #00365a 100%);
             color: white;
-            padding: 1rem 0;
+            padding: 2rem 0;
             text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
         }
+        
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
         nav {
-            background-color: #00365a;
-            padding: 0.5rem 0;
+            background: linear-gradient(135deg, #004d7a 0%, #00365a 100%);
+            padding: 1rem 0;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
         }
+        
         nav ul {
             list-style: none;
             padding: 0;
             display: flex;
             justify-content: center;
+            flex-wrap: wrap;
+            margin: 0;
         }
+        
         nav li {
-            margin: 0 15px;
+            margin: 0 10px;
         }
+        
         nav a {
             color: white;
             text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: block;
         }
+        
+        nav a:hover {
+            background-color: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
         .league-section {
-            background-color: white;
-            margin: 20px 0;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: white;
+            margin: 30px 0;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0,92,151,0.1);
+            transition: transform 0.3s ease;
         }
+        
+        .league-section:hover {
+            transform: translateY(-5px);
+        }
+        
+        .league-section h2 {
+            color: #2c3e50;
+            border-bottom: 3px solid #005c97;
+            padding-bottom: 12px;
+            margin-bottom: 25px;
+            display: inline-block;
+            font-size: 1.8em;
+        }
+        
         .match-card {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 5px;
+            background: white;
+            margin: 20px 0;
+            padding: 25px;
+            border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: all 0.3s ease;
+            border-left: 5px solid #005c97;
+            box-shadow: 0 6px 20px rgba(0,92,151,0.08);
         }
+        
+        .match-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0,92,151,0.15);
+            border-left: 5px solid #ff6b35;
+        }
+        
         .teams {
-            font-weight: bold;
-            flex-grow: 1;
+            font-size: 1.3em;
+            color: #2c3e50;
+            min-width: 220px;
+            font-weight: 600;
         }
+        
+        .match-status {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        
+        .match-status.ft { background: #e8f5e8; color: #27ae60; }
+        .match-status.ht { background: #fff3cd; color: #f39c12; }
+        .match-status.live { 
+            background: #ffeaea; 
+            color: #e74c3c; 
+            animation: pulse 1.5s infinite; 
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
         .score {
-            font-size: 1.5em;
+            font-size: 2.2em;
+            color: #e74c3c;
             font-weight: bold;
-            margin: 0 20px;
-            color: #005c97;
+            margin: 0 35px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            min-width: 120px;
+            text-align: center;
         }
+        
         .stats {
-            font-size: 0.9em;
-            color: #666;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            min-width: 250px;
         }
+        
+        .stats div {
+            text-align: center;
+            padding: 12px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+        
+        .stats div:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        button {
+            background: linear-gradient(45deg, #005c97, #0077b6);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 140px;
+            box-shadow: 0 4px 15px rgba(0,119,182,0.3);
+            font-size: 1em;
+        }
+        
+        button:hover {
+            background: linear-gradient(45deg, #0077b6, #0096c7);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,119,182,0.4);
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+        }
+        
         .loading {
             text-align: center;
-            padding: 2rem;
-            font-size: 1.2em;
-            color: #666;
+            padding: 3rem;
+            font-size: 1.5em;
+            color: #005c97;
         }
+        
+        .loading::after {
+            content: '';
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { content: '⏳'; }
+            33% { content: '⏳⏳'; }
+            66% { content: '⏳⏳⏳'; }
+            100% { content: '⏳'; }
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .connection-status.connected {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .connection-status.disconnected {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .connection-status.connecting {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .dev-log {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .dev-log h2 {
+            border-bottom-color: rgba(255,255,255,0.3);
+            color: white;
+        }
+        
+        .dev-log ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .dev-log li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .dev-log li:last-child {
+            border-bottom: none;
+        }
+        
         footer {
             text-align: center;
-            padding: 20px 0;
-            background-color: #00365a;
+            padding: 30px 0;
+            background: linear-gradient(135deg, #00365a 0%, #00253e 100%);
             color: white;
-            margin-top: 40px;
+            margin-top: 50px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 968px) {
+            .match-card {
+                flex-direction: column;
+                text-align: center;
+                padding: 20px;
+            }
+            
+            .teams, .score, .stats, button {
+                margin: 15px 0;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+                width: 100%;
+            }
+            
+            .score {
+                font-size: 2em;
+                margin: 20px 0;
+            }
+            
+            .connection-status {
+                top: 5px;
+                right: 5px;
+                font-size: 0.8em;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            nav li {
+                margin: 8px 0;
+            }
+            
+            header h1 {
+                font-size: 2em;
+            }
+            
+            .container {
+                width: 95%;
+            }
+        }
+        
+        /* 自定義滾動條 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #005c97, #0077b6);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #0077b6, #0096c7);
+        }
+        
+        .last-updated {
+            font-size: 0.9em;
+            color: #666;
+            text-align: center;
+            margin: 10px 0;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
     <div id="app">
+        <!-- 連接狀態指示器 -->
+        <div class="connection-status" :class="connectionStatus">
+            {{ connectionStatus === 'connected' ? '🟢 實時連接中' : 
+               connectionStatus === 'connecting' ? '🟡 連接中...' : '🔴 連接斷開' }}
+        </div>
+
         <header>
             <h1>⚽ 足球數據分析追蹤器</h1>
-            <p>Soccer Stats Tracker</p>
+            <p>Soccer Stats Tracker - 實時比賽數據與分析</p>
         </header>
 
         <nav>
@@ -100,14 +381,20 @@
                 <li><a href="#">英超</a></li>
                 <li><a href="#">西甲</a></li>
                 <li><a href="#">歐冠</a></li>
-                <!-- 更多聯賽 -->
+                <li><a href="#">意甲</a></li>
+                <li><a href="#">德甲</a></li>
             </ul>
         </nav>
 
         <main class="container">
+            <!-- 最後更新時間 -->
+            <div class="last-updated" v-if="!isLoading">
+                最後更新: {{ lastUpdated }}
+            </div>
+
             <!-- 加載狀態 -->
             <div class="loading" v-if="isLoading">
-                ⏳ 正在加載比賽數據...
+                ⏳ 正在加載最新比賽數據...
             </div>
 
             <!-- 聯賽區塊 -->
@@ -118,8 +405,8 @@
                 <div class="match-card" v-for="match in league.matches" :key="match.id">
                     <div class="teams">
                         {{ match.homeTeam }} vs {{ match.awayTeam }}
-                        <div style="font-size: 0.8em; color: #888; margin-top: 5px;">
-                            {{ match.status === 'FT' ? '全場結束' : match.status === 'HT' ? '中場休息' : '進行中' }}
+                        <div class="match-status" :class="match.status.toLowerCase()">
+                            {{ match.status === 'FT' ? '全場結束' : match.status === 'HT' ? '中場休息' : '比賽進行中' }}
                         </div>
                     </div>
                     <div class="score">{{ match.homeScore }} - {{ match.awayScore }}</div>
@@ -132,40 +419,51 @@
                 </div>
             </section>
 
-            <section class="league-section">
-                <h2>開發日誌 (Development Log)</h2>
-                <p>🚧 系統正在積極開發中！以下是我們的進度：</p>
+            <section class="league-section dev-log">
+                <h2>🚀 開發進度日誌</h2>
+                <p>系統正在持續優化中！以下是當前進度：</p>
                 <ul>
-                    <li>✅ 專案倉庫建立完成</li>
-                    <li>✅ 靜態頁面框架 (HTML, CSS, Vue.js) 已就緒</li>
-                    <li>✅ 後端 API (Netlify Functions) 已部署</li>
-                    <li>✅ 前後端數據連接成功</li>
-                    <li>⏳ 下一階段：即時數據更新功能</li>
-                    <li>⏳ 未來計劃：AI預測模型、戰術分析圖表</li>
+                    <li>✅ 專案架構搭建完成</li>
+                    <li>✅ 前後端分離設計</li>
+                    <li>✅ Netlify Functions API 部署</li>
+                    <li>✅ 實時數據通信實現</li>
+                    <li>✅ WebSocket 即時更新</li>
+                    <li>⏳ 真實數據源整合</li>
+                    <li>⏳ AI預測模型構建</li>
+                    <li>⏳ 戰術分析圖表實現</li>
                 </ul>
-                <p>感謝您的耐心等待，這將是一個從零開始打造的強大系統！</p>
+                <p>感謝您的支持，我們正在打造最專業的足球數據分析平台！</p>
             </section>
         </main>
 
         <footer>
-            <p>© 2024 Soccer Stats Tracker. 本網站僅供個人項目與學習使用。</p>
+            <p>© 2024 足球數據分析追蹤器 | 本網站僅供學習與技術演示使用</p>
         </footer>
     </div>
 
     <script>
-        const { createApp, ref } = Vue;
+        const { createApp, ref, onMounted, onUnmounted } = Vue;
 
         createApp({
             setup() {
-                const currentDate = ref(new Date().toLocaleDateString('zh-TW'));
-                const leagues = ref([]); // 初始化為空數組，從API獲取數據
-                const isLoading = ref(true); // 加載狀態
+                const currentDate = ref(new Date().toLocaleDateString('zh-TW', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    weekday: 'long'
+                }));
+                
+                const leagues = ref([]);
+                const isLoading = ref(true);
+                const connectionStatus = ref('connecting');
+                const lastUpdated = ref('');
+                let eventSource = null;
+                let pollInterval = null;
 
-                // 按聯賽名稱分組的函數
+                // 按聯賽名稱分組
                 const groupMatchesByLeague = (matches) => {
                     const grouped = {};
                     matches.forEach(match => {
-                        // 使用 match.league 作為分組鍵
                         if (!grouped[match.league]) {
                             grouped[match.league] = [];
                         }
@@ -174,14 +472,17 @@
                     return grouped;
                 };
 
-                // 從 Netlify Function 獲取數據
+                // 更新最後更新時間
+                const updateLastUpdatedTime = () => {
+                    lastUpdated.value = new Date().toLocaleTimeString('zh-TW');
+                };
+
+                // 獲取比賽數據
                 const fetchMatchData = async () => {
-                    isLoading.value = true;
                     try {
                         const response = await fetch('/.netlify/functions/getMatches');
                         const matchData = await response.json();
 
-                        // 將獲取到的數據按聯賽分組
                         const groupedData = groupMatchesByLeague(matchData);
                         leagues.value = Object.keys(groupedData).map(leagueName => ({
                             id: leagueName,
@@ -189,25 +490,92 @@
                             matches: groupedData[leagueName]
                         }));
 
+                        updateLastUpdatedTime();
                     } catch (error) {
                         console.error('獲取數據失敗:', error);
-                        alert('獲取比賽數據時發生錯誤，請稍後再試。');
                     } finally {
                         isLoading.value = false;
                     }
                 };
 
-                // 組件掛載時立即獲取數據
-                fetchMatchData();
+                // WebSocket 實時連接 (Server-Sent Events)
+                const setupWebSocketConnection = () => {
+                    try {
+                        connectionStatus.value = 'connecting';
+                        eventSource = new EventSource('/.netlify/functions/getMatches?stream=true');
+                        
+                        eventSource.onmessage = function(event) {
+                            try {
+                                const newData = JSON.parse(event.data);
+                                console.log('收到實時更新:', newData);
+                                
+                                // 更新數據
+                                const groupedData = groupMatchesByLeague(newData);
+                                leagues.value = Object.keys(groupedData).map(leagueName => ({
+                                    id: leagueName,
+                                    name: leagueName,
+                                    matches: groupedData[leagueName]
+                                }));
+                                
+                                updateLastUpdatedTime();
+                                connectionStatus.value = 'connected';
+                            } catch (error) {
+                                console.error('解析實時數據錯誤:', error);
+                            }
+                        };
+
+                        eventSource.onopen = function() {
+                            connectionStatus.value = 'connected';
+                            console.log('SSE 連接成功');
+                        };
+
+                        eventSource.onerror = function(error) {
+                            console.error('SSE 連接錯誤:', error);
+                            connectionStatus.value = 'disconnected';
+                            // 失敗時回退到輪詢
+                            if (eventSource) eventSource.close();
+                            setupPollingFallback();
+                        };
+                    } catch (error) {
+                        console.error('初始化 SSE 失敗:', error);
+                        setupPollingFallback();
+                    }
+                };
+
+                // 輪詢備用方案
+                const setupPollingFallback = () => {
+                    connectionStatus.value = 'disconnected';
+                    console.log('啟用輪詢備用方案');
+                    if (pollInterval) clearInterval(pollInterval);
+                    pollInterval = setInterval(fetchMatchData, 30000);
+                };
+
+                // 初始化
+                onMounted(() => {
+                    fetchMatchData();
+                    setupWebSocketConnection();
+                });
+
+                // 清理
+                onUnmounted(() => {
+                    if (eventSource) {
+                        eventSource.close();
+                    }
+                    if (pollInterval) {
+                        clearInterval(pollInterval);
+                    }
+                });
 
                 const viewMatchDetails = (match) => {
-                    alert(`即將為您顯示 ${match.homeTeam} vs ${match.awayTeam} 的詳細數據與分析！\n(此功能開發中)`);
+                    alert(`即將為您顯示 ${match.homeTeam} vs ${match.awayTeam} 的詳細數據與分析！\n\n比賽狀態: ${match.status === 'FT' ? '全場結束' : match.status === 'HT' ? '中場休息' : '進行中'}\n比分: ${match.homeScore} - ${match.awayScore}\n\n此功能開發中，敬請期待！`);
                 };
 
                 return {
                     currentDate,
                     leagues,
                     isLoading,
+                    connectionStatus,
+                    lastUpdated,
                     viewMatchDetails
                 };
             }

@@ -1,11 +1,11 @@
-// ���T�n������ƵL�ݥ���~���̿� 
-// �o���U�� Netlify ���T���]��� 
 // netlify/functions/getMatches.js
+// 明確聲明此函數無需任何外部依賴
+// 這有助於 Netlify 正確打包函數
 
 exports.handler = async function (event, context) {
   // 1. 設置 CORS 標頭，允許我們的Vue前端訪問這個API
   const headers = {
-    'Access-Control-Allow-Origin': '*', // 允許所有來源訪問（上線後可替換為您的Netlify網址）
+    'Access-Control-Allow-Origin': '*', // 允許所有來源訪問
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'GET, OPTIONS'
   };
@@ -19,7 +19,21 @@ exports.handler = async function (event, context) {
     };
   }
 
-  // 3. 模擬從數據庫獲取的數據（將來這裡會替換成從Supabase或爬蟲獲取的真實數據）
+  // 3. 添加 WebSocket/SSE 支持檢查
+  if (event.queryStringParameters && event.queryStringParameters.stream === 'true') {
+    return {
+      statusCode: 200,
+      headers: {
+        ...headers,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      },
+      body: `data: ${JSON.stringify(mockMatchData)}\n\n`
+    };
+  }
+
+  // 4. 模擬從數據庫獲取的數據
   const mockMatchData = [
     {
       id: 101,
@@ -42,6 +56,16 @@ exports.handler = async function (event, context) {
       league: '英超'
     },
     {
+      id: 103,
+      homeTeam: '切爾西',
+      awayTeam: '熱刺',
+      homeScore: 1,
+      awayScore: 1,
+      status: 'LIVE', // LIVE: 進行中
+      stats: { shots: 15, corners: 6, possession: 52 },
+      league: '英超'
+    },
+    {
       id: 201,
       homeTeam: '巴塞隆納',
       awayTeam: '皇家馬德里',
@@ -50,10 +74,20 @@ exports.handler = async function (event, context) {
       status: 'FT',
       stats: { shots: 25, corners: 9, possession: 62 },
       league: '西甲'
+    },
+    {
+      id: 202,
+      homeTeam: '馬德里競技',
+      awayTeam: '塞維利亞',
+      homeScore: 1,
+      awayScore: 0,
+      status: 'LIVE',
+      stats: { shots: 12, corners: 5, possession: 48 },
+      league: '西甲'
     }
   ];
 
-  // 4. 成功返回數據
+  // 5. 成功返回數據
   return {
     statusCode: 200,
     headers,
