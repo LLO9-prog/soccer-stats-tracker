@@ -1,3 +1,5 @@
+// 明確聲明此函數無需任何外部依賴 
+// 這有助於 Netlify 正確打包函數 
 // netlify/functions/getMatches.js
 
 exports.handler = async function (event, context) {
