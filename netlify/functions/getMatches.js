@@ -23,13 +23,16 @@ exports.handler = async function (event, context) {
     // 3. 從環境變數獲取 API Key
     const API_KEY = process.env.FOOTBALL_API_KEY;
     
-    if (!API_KEY) {
-      console.log('未設置 API Key，使用模擬數據');
+    console.log('API Key exists:', !!API_KEY);
+    console.log('API Key length:', API_KEY ? API_KEY.length : 0);
+
+    if (!API_KEY || API_KEY === 'test_key_123') {
+      console.log('未設置有效的 API Key，使用模擬數據');
       return successResponse(generateMockData(), headers);
     }
 
     // 4. 嘗試從 API-Football 獲取真實數據
-    console.log('嘗試從 API-Football 獲取數據...');
+    console.log('嘗試從 API-Football 獲取真實數據...');
     const response = await fetch('https://api.football-data.org/v4/matches', {
       headers: {
         'X-Auth-Token': API_KEY,
@@ -37,12 +40,15 @@ exports.handler = async function (event, context) {
       }
     });
 
+    console.log('API 響應狀態:', response.status);
+    
     if (response.ok) {
-      console.log('API 請求成功');
       const data = await response.json();
+      console.log('API 返回比賽數量:', data.matches ? data.matches.length : 0);
       
       if (data.matches && data.matches.length > 0) {
         const formattedMatches = formatMatchesData(data);
+        console.log('成功獲取真實比賽數據');
         return successResponse(formattedMatches, headers);
       } else {
         console.log('API 返回空數據，使用模擬數據');
@@ -50,11 +56,12 @@ exports.handler = async function (event, context) {
       }
     } else {
       console.log('API 請求失敗，狀態碼:', response.status);
+      console.log('使用模擬數據作為備用');
       return successResponse(generateMockData(), headers);
     }
 
   } catch (error) {
-    console.error('獲取數據時發生錯誤:', error);
+    console.error('獲取數據時發生錯誤:', error.message);
     return successResponse(generateMockData(), headers);
   }
 };
@@ -63,19 +70,33 @@ exports.handler = async function (event, context) {
 function formatMatchesData(data) {
   return data.matches.map(match => ({
     id: match.id,
-    homeTeam: match.homeTeam?.name || '未知主隊',
-    awayTeam: match.awayTeam?.name || '未知客隊',
+    homeTeam: match.homeTeam?.name || 'Unknown Home',
+    awayTeam: match.awayTeam?.name || 'Unknown Away',
     homeScore: match.score?.fullTime?.home ?? match.score?.halfTime?.home ?? 0,
     awayScore: match.score?.fullTime?.away ?? match.score?.halfTime?.away ?? 0,
     status: getMatchStatus(match.status),
     matchTime: match.utcDate ? new Date(match.utcDate) : new Date(),
     stats: {
-      shots: match.statistics?.shots?.total || Math.floor(Math.random() * 30),
-      corners: match.statistics?.corners || Math.floor(Math.random() * 15),
-      possession: match.statistics?.possession || Math.floor(Math.random() * 100)
+      shots: getStatistic(match, 'shots', 'total'),
+      corners: getStatistic(match, 'corners'),
+      possession: getStatistic(match, 'possession')
     },
-    league: match.competition?.name || '未知聯賽'
+    league: match.competition?.name || 'Unknown League'
   }));
+}
+
+// 獲取統計數據
+function getStatistic(match, category, type = null) {
+  if (!match.statistics) return Math.floor(Math.random() * (category === 'possession' ? 100 : 30));
+  
+  const stat = match.statistics.find(s => s.type === category);
+  if (!stat) return Math.floor(Math.random() * (category === 'possession' ? 100 : 30));
+  
+  if (type) {
+    return stat[type] || Math.floor(Math.random() * (category === 'possession' ? 100 : 30));
+  }
+  
+  return stat.value || Math.floor(Math.random() * (category === 'possession' ? 100 : 30));
 }
 
 // 獲取比賽狀態
@@ -84,7 +105,8 @@ function getMatchStatus(status) {
     'FINISHED': 'FT',
     'IN_PLAY': 'LIVE',
     'PAUSED': 'HT',
-    'SCHEDULED': 'UPCOMING'
+    'SCHEDULED': 'UPCOMING',
+    'TIMED': 'UPCOMING'
   };
   return statusMap[status] || 'LIVE';
 }
@@ -111,36 +133,6 @@ function generateMockData() {
       status: 'HT',
       stats: { shots: 22, corners: 10, possession: 45 },
       league: '英超'
-    },
-    {
-      id: 103,
-      homeTeam: '切爾西',
-      awayTeam: '熱刺',
-      homeScore: 1,
-      awayScore: 1,
-      status: 'LIVE',
-      stats: { shots: 15, corners: 6, possession: 52 },
-      league: '英超'
-    },
-    {
-      id: 201,
-      homeTeam: '巴塞隆納',
-      awayTeam: '皇家馬德里',
-      homeScore: 3,
-      awayScore: 2,
-      status: 'FT',
-      stats: { shots: 25, corners: 9, possession: 62 },
-      league: '西甲'
-    },
-    {
-      id: 202,
-      homeTeam: '馬德里競技',
-      awayTeam: '塞維利亞',
-      homeScore: 1,
-      awayScore: 0,
-      status: 'LIVE',
-      stats: { shots: 12, corners: 5, possession: 48 },
-      league: '西甲'
     }
   ];
 }
