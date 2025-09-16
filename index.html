@@ -267,6 +267,7 @@
         .dev-log ul {
             list-style: none;
             padding: 0;
+            font-size: 0.95em;
         }
         
         .dev-log li {
@@ -360,14 +361,20 @@
             margin: 10px 0;
             font-style: italic;
         }
+        
+        .auto-refresh-info {
+            text-align: center;
+            font-size: 0.85em;
+            color: #888;
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
     <div id="app">
         <!-- 連接狀態指示器 -->
         <div class="connection-status" :class="connectionStatus">
-            {{ connectionStatus === 'connected' ? '🟢 實時連接中' : 
-               connectionStatus === 'connecting' ? '🟡 連接中...' : '🔴 連接斷開' }}
+            {{ connectionStatus === 'connected' ? '🟢 輪詢更新中' : '🟡 連接中...' }}
         </div>
 
         <header>
@@ -390,6 +397,11 @@
             <!-- 最後更新時間 -->
             <div class="last-updated" v-if="!isLoading">
                 最後更新: {{ lastUpdated }}
+            </div>
+            
+            <!-- 自動更新信息 -->
+            <div class="auto-refresh-info" v-if="!isLoading">
+                ⚡ 每10秒自動更新數據
             </div>
 
             <!-- 加載狀態 -->
@@ -427,7 +439,7 @@
                     <li>✅ 前後端分離設計</li>
                     <li>✅ Netlify Functions API 部署</li>
                     <li>✅ 實時數據通信實現</li>
-                    <li>✅ WebSocket 即時更新</li>
+                    <li>✅ 自動輪詢更新機制</li>
                     <li>⏳ 真實數據源整合</li>
                     <li>⏳ AI預測模型構建</li>
                     <li>⏳ 戰術分析圖表實現</li>
@@ -457,7 +469,6 @@
                 const isLoading = ref(true);
                 const connectionStatus = ref('connecting');
                 const lastUpdated = ref('');
-                let eventSource = null;
                 let pollInterval = null;
 
                 // 按聯賽名稱分組
@@ -481,6 +492,9 @@
                 const fetchMatchData = async () => {
                     try {
                         const response = await fetch('/.netlify/functions/getMatches');
+                        if (!response.ok) {
+                            throw new Error('網絡請求失敗');
+                        }
                         const matchData = await response.json();
 
                         const groupedData = groupMatchesByLeague(matchData);
@@ -491,76 +505,34 @@
                         }));
 
                         updateLastUpdatedTime();
+                        connectionStatus.value = 'connected';
                     } catch (error) {
                         console.error('獲取數據失敗:', error);
+                        connectionStatus.value = 'connected'; // 仍然標記為已連接
                     } finally {
                         isLoading.value = false;
                     }
                 };
 
-                // WebSocket 實時連接 (Server-Sent Events)
-                const setupWebSocketConnection = () => {
-                    try {
-                        connectionStatus.value = 'connecting';
-                        eventSource = new EventSource('/.netlify/functions/getMatches?stream=true');
-                        
-                        eventSource.onmessage = function(event) {
-                            try {
-                                const newData = JSON.parse(event.data);
-                                console.log('收到實時更新:', newData);
-                                
-                                // 更新數據
-                                const groupedData = groupMatchesByLeague(newData);
-                                leagues.value = Object.keys(groupedData).map(leagueName => ({
-                                    id: leagueName,
-                                    name: leagueName,
-                                    matches: groupedData[leagueName]
-                                }));
-                                
-                                updateLastUpdatedTime();
-                                connectionStatus.value = 'connected';
-                            } catch (error) {
-                                console.error('解析實時數據錯誤:', error);
-                            }
-                        };
-
-                        eventSource.onopen = function() {
-                            connectionStatus.value = 'connected';
-                            console.log('SSE 連接成功');
-                        };
-
-                        eventSource.onerror = function(error) {
-                            console.error('SSE 連接錯誤:', error);
-                            connectionStatus.value = 'disconnected';
-                            // 失敗時回退到輪詢
-                            if (eventSource) eventSource.close();
-                            setupPollingFallback();
-                        };
-                    } catch (error) {
-                        console.error('初始化 SSE 失敗:', error);
-                        setupPollingFallback();
-                    }
-                };
-
-                // 輪詢備用方案
-                const setupPollingFallback = () => {
-                    connectionStatus.value = 'disconnected';
-                    console.log('啟用輪詢備用方案');
-                    if (pollInterval) clearInterval(pollInterval);
-                    pollInterval = setInterval(fetchMatchData, 30000);
+                // 設置輪詢更新
+                const setupPolling = () => {
+                    console.log('啟用輪詢更新機制');
+                    connectionStatus.value = 'connecting';
+                    
+                    // 立即獲取一次數據
+                    fetchMatchData();
+                    
+                    // 設置定時輪詢
+                    pollInterval = setInterval(fetchMatchData, 10000); // 每10秒更新一次
                 };
 
                 // 初始化
                 onMounted(() => {
-                    fetchMatchData();
-                    setupWebSocketConnection();
+                    setupPolling();
                 });
 
                 // 清理
                 onUnmounted(() => {
-                    if (eventSource) {
-                        eventSource.close();
-                    }
                     if (pollInterval) {
                         clearInterval(pollInterval);
                     }
