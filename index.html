@@ -72,6 +72,12 @@
             font-size: 0.9em;
             color: #666;
         }
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2em;
+            color: #666;
+        }
         footer {
             text-align: center;
             padding: 20px 0;
@@ -99,7 +105,12 @@
         </nav>
 
         <main class="container">
-            <!-- 聯賽區塊 - 我們會用 Vue 根據數據動態生成多個這樣的區塊 -->
+            <!-- 加載狀態 -->
+            <div class="loading" v-if="isLoading">
+                ⏳ 正在加載比賽數據...
+            </div>
+
+            <!-- 聯賽區塊 -->
             <section class="league-section" v-for="league in leagues" :key="league.id">
                 <h2>{{ league.name }}</h2>
 
@@ -107,6 +118,9 @@
                 <div class="match-card" v-for="match in league.matches" :key="match.id">
                     <div class="teams">
                         {{ match.homeTeam }} vs {{ match.awayTeam }}
+                        <div style="font-size: 0.8em; color: #888; margin-top: 5px;">
+                            {{ match.status === 'FT' ? '全場結束' : match.status === 'HT' ? '中場休息' : '進行中' }}
+                        </div>
                     </div>
                     <div class="score">{{ match.homeScore }} - {{ match.awayScore }}</div>
                     <div class="stats">
@@ -124,7 +138,9 @@
                 <ul>
                     <li>✅ 專案倉庫建立完成</li>
                     <li>✅ 靜態頁面框架 (HTML, CSS, Vue.js) 已就緒</li>
-                    <li>⏳ 下一階段：連接後端數據與即時更新功能</li>
+                    <li>✅ 後端 API (Netlify Functions) 已部署</li>
+                    <li>✅ 前後端數據連接成功</li>
+                    <li>⏳ 下一階段：即時數據更新功能</li>
                     <li>⏳ 未來計劃：AI預測模型、戰術分析圖表</li>
                 </ul>
                 <p>感謝您的耐心等待，這將是一個從零開始打造的強大系統！</p>
@@ -140,64 +156,61 @@
         const { createApp, ref } = Vue;
 
         createApp({
-            // 在 index.html 的 Vue 應用程序中替換 setup() 函數
+            setup() {
+                const currentDate = ref(new Date().toLocaleDateString('zh-TW'));
+                const leagues = ref([]); // 初始化為空數組，從API獲取數據
+                const isLoading = ref(true); // 加載狀態
 
-setup() {
-    const currentDate = ref(new Date().toLocaleDateString('zh-TW'));
-    const leagues = ref([]); // 初始化為空數組，不再使用假數據
-    const isLoading = ref(true); // 添加一個加載狀態
+                // 按聯賽名稱分組的函數
+                const groupMatchesByLeague = (matches) => {
+                    const grouped = {};
+                    matches.forEach(match => {
+                        // 使用 match.league 作為分組鍵
+                        if (!grouped[match.league]) {
+                            grouped[match.league] = [];
+                        }
+                        grouped[match.league].push(match);
+                    });
+                    return grouped;
+                };
 
-    // 這是一個將從API獲取的比賽數組，按聯賽名稱分組的函數
-    const groupMatchesByLeague = (matches) => {
-      const grouped = {};
-      matches.forEach(match => {
-        if (!grouped[match.league]) {
-          grouped[match.league] = [];
-        }
-        grouped[match.league].push(match);
-      });
-      return grouped;
-    };
+                // 從 Netlify Function 獲取數據
+                const fetchMatchData = async () => {
+                    isLoading.value = true;
+                    try {
+                        const response = await fetch('/.netlify/functions/getMatches');
+                        const matchData = await response.json();
 
-    // 關鍵：使用 fetch 從我們自己的 Netlify Function 獲取數據
-    const fetchMatchData = async () => {
-      isLoading.value = true;
-      try {
-        // 注意這個URL！在本機開發時可能是 http://localhost:8888/.netlify/functions/getMatches
-        // 部署後會變成 https://你的網站網址/.netlify/functions/getMatches
-        const response = await fetch('/.netlify/functions/getMatches');
-        const matchData = await response.json();
+                        // 將獲取到的數據按聯賽分組
+                        const groupedData = groupMatchesByLeague(matchData);
+                        leagues.value = Object.keys(groupedData).map(leagueName => ({
+                            id: leagueName,
+                            name: leagueName,
+                            matches: groupedData[leagueName]
+                        }));
 
-        // 將獲取到的數據按聯賽分組，並轉換成前端需要的格式
-        const groupedData = groupMatchesByLeague(matchData);
-        leagues.value = Object.keys(groupedData).map(leagueName => ({
-          id: leagueName,
-          name: leagueName,
-          matches: groupedData[leagueName]
-        }));
+                    } catch (error) {
+                        console.error('獲取數據失敗:', error);
+                        alert('獲取比賽數據時發生錯誤，請稍後再試。');
+                    } finally {
+                        isLoading.value = false;
+                    }
+                };
 
-      } catch (error) {
-        console.error('獲取數據失敗:', error);
-        alert('獲取比賽數據時發生錯誤，請稍後再試。');
-      } finally {
-        isLoading.value = false;
-      }
-    };
+                // 組件掛載時立即獲取數據
+                fetchMatchData();
 
-    // 組件掛載時立即獲取數據
-    fetchMatchData();
+                const viewMatchDetails = (match) => {
+                    alert(`即將為您顯示 ${match.homeTeam} vs ${match.awayTeam} 的詳細數據與分析！\n(此功能開發中)`);
+                };
 
-    const viewMatchDetails = (match) => {
-      alert(`即將為您顯示 ${match.homeTeam} vs ${match.awayTeam} 的詳細數據與分析！\n(此功能開發中)`);
-    };
-
-    return {
-      currentDate,
-      leagues,
-      isLoading,
-      viewMatchDetails
-    };
-}
+                return {
+                    currentDate,
+                    leagues,
+                    isLoading,
+                    viewMatchDetails
+                };
+            }
         }).mount('#app');
     </script>
 </body>
