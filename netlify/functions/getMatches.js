@@ -132,6 +132,7 @@ function generateMockData() {
       homeScore: 2,
       awayScore: 1,
       status: 'FT',
+      matchTime: new Date(),
       stats: { shots: 18, corners: 7, possession: 58 },
       league: '英超'
     },
@@ -142,6 +143,7 @@ function generateMockData() {
       homeScore: 0,
       awayScore: 0,
       status: 'HT',
+      matchTime: new Date(),
       stats: { shots: 22, corners: 10, possession: 45 },
       league: '英超'
     },
@@ -152,6 +154,7 @@ function generateMockData() {
       homeScore: 1,
       awayScore: 1,
       status: 'LIVE',
+      matchTime: new Date(),
       stats: { shots: 15, corners: 6, possession: 52 },
       league: '英超'
     },
@@ -162,6 +165,7 @@ function generateMockData() {
       homeScore: 3,
       awayScore: 2,
       status: 'FT',
+      matchTime: new Date(),
       stats: { shots: 25, corners: 9, possession: 62 },
       league: '西甲'
     }
