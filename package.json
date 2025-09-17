@@ -1,1 +1,11 @@
-{ "name": "soccer-stats-tracker", "version": "1.0.0", "description": "A football match analysis system", "scripts": { "build": "echo 'Building functions...' && echo 'Build complete!'" } } 
+{
+  "name": "soccer-stats-tracker",
+  "version": "1.0.0",
+  "description": "A football match analysis system",
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  },
+  "scripts": {
+    "build": "echo 'Build complete'"
+  }
+}
