@@ -75,7 +75,7 @@ exports.handler = async function (event, context) {
       console.log('API 錯誤響應:', errorText);
       console.log('使用模擬數據作為備用');
       const mockData = generateMockData();
-      return successResponse(applyFilters(mockData, { league, status, limit }), headers);
+        return successResponse(applyFilters(mockData, { league, status, limit }), headers);
     }
 
   } catch (error) {
@@ -237,11 +237,15 @@ function generateMockData() {
   });
 }
 
-// 成功響應函數
+// 成功響應函數 - 修改為返回物件格式
 function successResponse(data, headers) {
   return {
     statusCode: 200,
     headers,
-    body: JSON.stringify(data)
+    body: JSON.stringify({
+      matches: data,  // 將陣列包在 matches 屬性中
+      count: data.length,
+      timestamp: new Date().toISOString()
+    })
   };
 }
