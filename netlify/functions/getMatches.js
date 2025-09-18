@@ -26,13 +26,25 @@ exports.handler = async function (event, context) {
     console.log('使用 Football-Data.org API...');
     console.log('API Key 存在:', !!API_KEY);
 
+    // 檢查請求參數，支持過濾和分頁
+    const { league = '', status = '', limit = 50 } = event.queryStringParameters || {};
+
     if (!API_KEY) {
       console.log('未設置 API Key，使用模擬數據');
-      return successResponse(generateMockData(), headers);
+      const mockData = generateMockData();
+      return successResponse(applyFilters(mockData, { league, status, limit }), headers);
     }
 
-    // Football-Data.org API 端點
-    const API_URL = 'https://api.football-data.org/v4/matches';
+    // 構建 API 請求 URL
+    let API_URL = 'https://api.football-data.org/v4/matches';
+    const params = [];
+    
+    if (league) params.push(`competitions=${league}`);
+    if (status) params.push(`status=${status}`);
+    if (params.length > 0) {
+      API_URL += `?${params.join('&')}`;
+    }
+
     console.log('請求 URL:', API_URL);
     
     const response = await fetch(API_URL, {
@@ -50,22 +62,27 @@ exports.handler = async function (event, context) {
       
       if (data.matches && data.matches.length > 0) {
         const formattedMatches = formatFootballDataMatches(data);
-        console.log('格式化後的比賽數量:', formattedMatches.length);
-        return successResponse(formattedMatches, headers);
+        const filteredMatches = applyFilters(formattedMatches, { league, status, limit });
+        console.log('格式化後的比賽數量:', filteredMatches.length);
+        return successResponse(filteredMatches, headers);
       } else {
         console.log('API 返回空數據，使用模擬數據');
-        return successResponse(generateMockData(), headers);
+        const mockData = generateMockData();
+        return successResponse(applyFilters(mockData, { league, status, limit }), headers);
       }
     } else {
       const errorText = await response.text();
       console.log('API 錯誤響應:', errorText);
       console.log('使用模擬數據作為備用');
-      return successResponse(generateMockData(), headers);
+      const mockData = generateMockData();
+      return successResponse(applyFilters(mockData, { league, status, limit }), headers);
     }
 
   } catch (error) {
     console.error('獲取數據時發生錯誤:', error.message);
-    return successResponse(generateMockData(), headers);
+    const mockData = generateMockData();
+    const { league = '', status = '', limit = 50 } = event.queryStringParameters || {};
+    return successResponse(applyFilters(mockData, { league, status, limit }), headers);
   }
 };
 
@@ -75,35 +92,55 @@ function formatFootballDataMatches(data) {
     return generateMockData();
   }
   
-  return data.matches.map(match => ({
-    id: match.id,
-    homeTeam: match.homeTeam?.name || 'Unknown Home Team',
-    awayTeam: match.awayTeam?.name || 'Unknown Away Team',
-    homeScore: match.score?.fullTime?.home ?? match.score?.halfTime?.home ?? 0,
-    awayScore: match.score?.fullTime?.away ?? match.score?.halfTime?.away ?? 0,
-    status: getMatchStatus(match.status),
-    matchTime: match.utcDate ? new Date(match.utcDate) : new Date(),
-    stats: {
-      shots: getRandomStat('shots'),
-      corners: getRandomStat('corners'),
-      possession: getRandomStat('possession')
-    },
-    league: match.competition?.name || 'Unknown League'
-  }));
+  return data.matches.map(match => {
+    const homeScore = match.score?.fullTime?.home ?? match.score?.halfTime?.home ?? match.score?.regularTime?.home ?? 0;
+    const awayScore = match.score?.fullTime?.away ?? match.score?.halfTime?.away ?? match.score?.regularTime?.away ?? 0;
+    
+    return {
+      id: match.id,
+      homeTeam: match.homeTeam?.name || 'Unknown Home Team',
+      awayTeam: match.awayTeam?.name || 'Unknown Away Team',
+      homeScore: homeScore,
+      awayScore: awayScore,
+      status: getMatchStatus(match.status),
+      matchTime: match.utcDate ? new Date(match.utcDate) : new Date(),
+      stats: {
+        shots: getRandomStat('shots'),
+        shotsOnTarget: getRandomStat('shotsOnTarget'),
+        corners: getRandomStat('corners'),
+        possession: getRandomStat('possession'),
+        fouls: getRandomStat('fouls'),
+        offsides: getRandomStat('offsides')
+      },
+      league: match.competition?.name || 'Unknown League',
+      competitionId: match.competition?.id,
+      area: match.area?.name,
+      venue: match.venue || 'Unknown Venue',
+      matchday: match.matchday,
+      stage: match.stage || 'REGULAR_SEASON',
+      group: match.group,
+      lastUpdated: match.lastUpdated || new Date().toISOString()
+    };
+  });
 }
 
-// 生成隨機統計數據
+// 生成隨機統計數據（更真實的範圍）
 function getRandomStat(type) {
   const ranges = {
-    'shots': { min: 5, max: 30 },
-    'corners': { min: 2, max: 15 },
-    'possession': { min: 30, max: 70 }
+    'shots': { min: 3, max: 25 },
+    'shotsOnTarget': { min: 1, max: 12 },
+    'corners': { min: 1, max: 15 },
+    'possession': { min: 25, max: 75 },
+    'fouls': { min: 8, max: 25 },
+    'offsides': { min: 0, max: 8 },
+    'yellowCards': { min: 0, max: 6 },
+    'redCards': { min: 0, max: 2 }
   };
   const range = ranges[type] || { min: 0, max: 10 };
   return Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
 }
 
-// 獲取比賽狀態
+// 獲取比賽狀態（更詳細的映射）
 function getMatchStatus(status) {
   const statusMap = {
     'FINISHED': 'FT',
@@ -113,34 +150,91 @@ function getMatchStatus(status) {
     'TIMED': 'UPCOMING',
     'POSTPONED': 'POSTPONED',
     'SUSPENDED': 'SUSPENDED',
-    'CANCELLED': 'CANCELLED'
+    'CANCELLED': 'CANCELLED',
+    'AWARDED': 'AWARDED',
+    'INTERRUPTED': 'INTERRUPTED'
   };
   return statusMap[status] || 'UPCOMING';
 }
 
-// 生成模擬數據（備用）
+// 應用過濾器
+function applyFilters(matches, filters) {
+  let filtered = matches;
+  
+  if (filters.league) {
+    filtered = filtered.filter(match => 
+      match.league.includes(filters.league) || 
+      match.area?.includes(filters.league)
+    );
+  }
+  
+  if (filters.status) {
+    filtered = filtered.filter(match => 
+      match.status === filters.status.toUpperCase()
+    );
+  }
+  
+  if (filters.limit) {
+    filtered = filtered.slice(0, parseInt(filters.limit));
+  }
+  
+  return filtered;
+}
+
+// 生成更真實的模擬數據（備用）
 function generateMockData() {
-  const leagues = ['英超', '西甲', '德甲', '意甲', '法甲'];
+  const leagues = [
+    { name: '英超', area: 'England', id: 'PL' },
+    { name: '西甲', area: 'Spain', id: 'PD' },
+    { name: '德甲', area: 'Germany', id: 'BL1' },
+    { name: '意甲', area: 'Italy', id: 'SA' },
+    { name: '法甲', area: 'France', id: 'FL1' },
+    { name: '歐冠', area: 'Europe', id: 'CL' }
+  ];
+
   const teams = [
     ['曼城', '兵工廠'], ['曼聯', '利物浦'], ['切爾西', '熱刺'],
-    ['巴塞隆納', '皇家馬德里'], ['拜仁', '多特蒙德']
+    ['巴塞隆納', '皇家馬德里'], ['拜仁慕尼黑', '多特蒙德'],
+    ['祖雲達斯', '國際米蘭'], ['巴黎聖日耳曼', '馬賽'],
+    ['AC米蘭', '那不勒斯'], ['馬德里競技', '塞維利亞']
   ];
   
-  return teams.map(([home, away], index) => ({
-    id: 100 + index,
-    homeTeam: home,
-    awayTeam: away,
-    homeScore: Math.floor(Math.random() * 5),
-    awayScore: Math.floor(Math.random() * 5),
-    status: ['FT', 'LIVE', 'HT', 'UPCOMING'][index % 4],
-    matchTime: new Date(Date.now() + index * 3600000),
-    stats: {
-      shots: Math.floor(Math.random() * 25) + 5,
-      corners: Math.floor(Math.random() * 13) + 2,
-      possession: Math.floor(Math.random() * 40) + 30
-    },
-    league: leagues[index % leagues.length]
-  }));
+  const statuses = ['FT', 'LIVE', 'HT', 'UPCOMING'];
+  const venues = ['伊蒂哈德球場', '酋長球場', '老特拉福德球場', '安菲爾德球場', '諾坎普球場', '伯納烏球場'];
+  
+  return teams.map(([home, away], index) => {
+    const league = leagues[index % leagues.length];
+    const status = statuses[index % statuses.length];
+    const homeScore = status === 'UPCOMING' ? 0 : Math.floor(Math.random() * 5);
+    const awayScore = status === 'UPCOMING' ? 0 : Math.floor(Math.random() * 5);
+    
+    return {
+      id: 1000 + index,
+      homeTeam: home,
+      awayTeam: away,
+      homeScore: homeScore,
+      awayScore: awayScore,
+      status: status,
+      matchTime: new Date(Date.now() + (index - 2) * 3600000), // 混合過去和未來的比賽
+      stats: {
+        shots: getRandomStat('shots'),
+        shotsOnTarget: getRandomStat('shotsOnTarget'),
+        corners: getRandomStat('corners'),
+        possession: getRandomStat('possession'),
+        fouls: getRandomStat('fouls'),
+        offsides: getRandomStat('offsides'),
+        yellowCards: getRandomStat('yellowCards'),
+        redCards: getRandomStat('redCards')
+      },
+      league: league.name,
+      competitionId: league.id,
+      area: league.area,
+      venue: venues[index % venues.length],
+      matchday: Math.floor(index / 3) + 1,
+      stage: 'REGULAR_SEASON',
+      lastUpdated: new Date().toISOString()
+    };
+  });
 }
 
 // 成功響應函數

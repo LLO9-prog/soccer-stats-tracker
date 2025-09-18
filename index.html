@@ -494,6 +494,127 @@
             color: #005c97;
         }
         
+        /* 比賽事件時間軸樣式 */
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background: #0077b6;
+            transform: translateX(-50%);
+        }
+        
+        .timeline-event {
+            display: flex;
+            justify-content: flex-end;
+            padding-right: 30px;
+            position: relative;
+            margin-bottom: 20px;
+            width: 50%;
+        }
+        
+        .timeline-event:nth-child(even) {
+            align-self: flex-end;
+            justify-content: flex-start;
+            padding-left: 30px;
+            padding-right: 0;
+            margin-left: 50%;
+        }
+        
+        .event-content {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 300px;
+            position: relative;
+        }
+        
+        .event-time {
+            font-weight: bold;
+            color: #0077b6;
+            margin-bottom: 5px;
+        }
+        
+        .event-type {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .timeline-event::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            right: -6px;
+            background: #0077b6;
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .timeline-event:nth-child(even)::after {
+            left: -6px;
+            right: auto;
+        }
+        
+        /* 統計圖表容器 */
+        .chart-container {
+            height: 400px;
+            width: 100%;
+            margin: 20px 0;
+        }
+        
+        /* 陣容樣式 */
+        .lineup-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        
+        .lineup-team {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .lineup-player {
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        /* 歷史數據表格 */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .history-table th, .history-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        
+        .history-table th {
+            background: #0077b6;
+            color: white;
+        }
+        
+        .history-table tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+        
         /* 響應式調整 */
         @media (max-width: 768px) {
             .teams-display {
@@ -515,6 +636,26 @@
                 min-width: 120px;
                 text-align: center;
             }
+            
+            .timeline::before {
+                left: 30px;
+            }
+            
+            .timeline-event, .timeline-event:nth-child(even) {
+                width: 100%;
+                padding-left: 60px;
+                padding-right: 0;
+                margin-left: 0;
+            }
+            
+            .timeline-event::after, .timeline-event:nth-child(even)::after {
+                left: 24px;
+                right: auto;
+            }
+            
+            .lineup-container {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -522,7 +663,7 @@
     <div id="app">
         <!-- 連接狀態指示器 -->
         <div class="connection-status" :class="connectionStatus">
-            {{ connectionStatus === 'connected' ? '🟢 輪詢更新中' : '🟡 連接中...' }}
+            {{ connectionStatus === 'connected' ? '🟢 輪詢更新中' : connectionStatus === 'connecting' ? '🟡 連接中...' : '🔴 連接失敗' }}
         </div>
 
         <header>
@@ -561,7 +702,7 @@
                     </div>
 
                     <!-- 聯賽區塊 -->
-                    <section class="league-section" v-for="league in leagues" :key="league.id">
+                    <section class="league-section" v-for="league in filteredLeagues" :key="league.id">
                         <h2>{{ league.name }}</h2>
 
                         <!-- 比賽卡片 -->
@@ -578,7 +719,7 @@
                                 <div>角球: {{ match.stats.corners }}</div>
                                 <div>控球率: {{ match.stats.possession }}%</div>
                             </div>
-                            <button @click="viewMatchDetails(match)">詳細分析</button>
+                            <button @click.stop="viewMatchDetails(match)">詳細分析</button>
                         </div>
                     </section>
 
@@ -592,7 +733,7 @@
                             <li>✅ 實時數據通信實現</li>
                             <li>✅ 自動輪詢更新機制</li>
                             <li>✅ 比賽詳情路由系統</li>
-                            <li>⏳ 詳細數據分析頁面</li>
+                            <li>✅ 詳細數據分析頁面</li>
                             <li>⏳ AI預測模型構建</li>
                         </ul>
                     </section>
@@ -629,6 +770,22 @@
                             <p>比賽時間: {{ formatDate(currentMatch.matchTime) }} | 場地: {{ currentMatch.venue }}</p>
                         </div>
 
+                        <!-- 比賽基本信息 -->
+                        <div class="match-info">
+                            <div class="info-card">
+                                <h3>裁判</h3>
+                                <p>{{ currentMatch.referee || '待確認' }}</p>
+                            </div>
+                            <div class="info-card">
+                                <h3>觀眾人數</h3>
+                                <p>{{ currentMatch.attendance || '待確認' }}</p>
+                            </div>
+                            <div class="info-card">
+                                <h3>天氣狀況</h3>
+                                <p>{{ currentMatch.weather || '待確認' }}</p>
+                            </div>
+                        </div>
+
                         <!-- 選項卡導航 -->
                         <div class="tab-navigation">
                             <button class="tab-button" :class="{ active: currentTab === 'events' }" @click="currentTab = 'events'">
@@ -647,21 +804,71 @@
 
                         <!-- 選項卡內容 -->
                         <div class="tab-content">
+                            <!-- 比賽事件時間軸 -->
                             <div v-if="currentTab === 'events'">
                                 <h3>比賽事件時間軸</h3>
-                                <p>此功能開發中，敬請期待！</p>
+                                <div class="timeline" v-if="currentMatch.events && currentMatch.events.length">
+                                    <div class="timeline-event" v-for="(event, index) in currentMatch.events" :key="index">
+                                        <div class="event-content">
+                                            <div class="event-time">{{ event.time }}'</div>
+                                            <div class="event-type">{{ getEventTypeText(event.type) }}</div>
+                                            <div>{{ event.player }} {{ event.team === 'home' ? currentMatch.homeTeam : currentMatch.awayTeam }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p v-else>暫無比賽事件數據</p>
                             </div>
+                            
+                            <!-- 技術統計 -->
                             <div v-if="currentTab === 'stats'">
                                 <h3>技術統計</h3>
-                                <p>此功能開發中，敬請期待！</p>
+                                <div class="chart-container" id="statsChart"></div>
                             </div>
+                            
+                            <!-- 陣容名單 -->
                             <div v-if="currentTab === 'lineup'">
                                 <h3>陣容名單</h3>
-                                <p>此功能開發中，敬請期待！</p>
+                                <div class="lineup-container" v-if="currentMatch.lineups">
+                                    <div class="lineup-team">
+                                        <h4>{{ currentMatch.homeTeam }}</h4>
+                                        <div class="lineup-player" v-for="(player, index) in currentMatch.lineups.home" :key="'home-' + index">
+                                            {{ player.number }}. {{ player.name }} ({{ player.position }})
+                                        </div>
+                                    </div>
+                                    <div class="lineup-team">
+                                        <h4>{{ currentMatch.awayTeam }}</h4>
+                                        <div class="lineup-player" v-for="(player, index) in currentMatch.lineups.away" :key="'away-' + index">
+                                            {{ player.number }}. {{ player.name }} ({{ player.position }})
+                                        </div>
+                                    </div>
+                                </div>
+                                <p v-else>暫無陣容數據</p>
                             </div>
+                            
+                            <!-- 歷史數據 -->
                             <div v-if="currentTab === 'history'">
                                 <h3>歷史交鋒數據</h3>
-                                <p>此功能開發中，敬請期待！</p>
+                                <div v-if="currentMatch.history && currentMatch.history.length">
+                                    <table class="history-table">
+                                        <thead>
+                                            <tr>
+                                                <th>日期</th>
+                                                <th>比賽</th>
+                                                <th>比分</th>
+                                                <th>賽事</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(match, index) in currentMatch.history" :key="index">
+                                                <td>{{ formatDateShort(match.date) }}</td>
+                                                <td>{{ match.homeTeam }} vs {{ match.awayTeam }}</td>
+                                                <td>{{ match.homeScore }} - {{ match.awayScore }}</td>
+                                                <td>{{ match.competition }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p v-else>暫無歷史交鋒數據</p>
                             </div>
                         </div>
                     </div>
@@ -681,7 +888,7 @@
     </div>
 
     <script>
-        const { createApp, ref, onMounted, onUnmounted, computed } = Vue;
+        const { createApp, ref, onMounted, onUnmounted, computed, watch, nextTick } = Vue;
 
         createApp({
             setup() {
@@ -693,9 +900,11 @@
                 }));
                 
                 const leagues = ref([]);
+                const filteredLeagues = ref([]);
                 const isLoading = ref(true);
                 const connectionStatus = ref('connecting');
                 const lastUpdated = ref('');
+                const selectedLeague = ref('');
                 
                 // 詳情頁相關狀態
                 const currentRoute = ref(window.location.hash.slice(1) || '/');
@@ -703,6 +912,7 @@
                 const loadingMatchDetails = ref(false);
                 const currentTab = ref('events');
                 let pollInterval = null;
+                let statsChart = null;
 
                 // 監聽路由變化
                 const handleHashChange = () => {
@@ -735,6 +945,19 @@
                     return statusMap[status] || status;
                 };
 
+                // 事件類型文字顯示
+                const getEventTypeText = (type) => {
+                    const eventMap = {
+                        'goal': '進球',
+                        'yellow-card': '黃牌',
+                        'red-card': '紅牌',
+                        'substitution': '換人',
+                        'penalty': '點球',
+                        'own-goal': '烏龍球'
+                    };
+                    return eventMap[type] || type;
+                };
+
                 // 日期格式化
                 const formatDate = (date) => {
                     return new Date(date).toLocaleString('zh-TW', {
@@ -743,6 +966,90 @@
                         day: '2-digit',
                         hour: '2-digit',
                         minute: '2-digit'
+                    });
+                };
+
+                // 短日期格式化
+                const formatDateShort = (date) => {
+                    return new Date(date).toLocaleDateString('zh-TW');
+                };
+
+                // 初始化統計圖表
+                const initStatsChart = () => {
+                    if (!currentMatch.value) return;
+                    
+                    const chartDom = document.getElementById('statsChart');
+                    if (!chartDom) return;
+                    
+                    statsChart = echarts.init(chartDom);
+                    
+                    const option = {
+                        title: {
+                            text: '比賽技術統計',
+                            left: 'center'
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow'
+                            }
+                        },
+                        legend: {
+                            data: [currentMatch.value.homeTeam, currentMatch.value.awayTeam],
+                            bottom: 10
+                        },
+                        grid: {
+                            left: '3%',
+                            right: '4%',
+                            bottom: '15%',
+                            containLabel: true
+                        },
+                        xAxis: {
+                            type: 'value'
+                        },
+                        yAxis: {
+                            type: 'category',
+                            data: ['射門', '射正', '角球', '犯規', '越位', '控球率']
+                        },
+                        series: [
+                            {
+                                name: currentMatch.value.homeTeam,
+                                type: 'bar',
+                                data: [
+                                    currentMatch.value.stats.shots || 0,
+                                    currentMatch.value.stats.shotsOnTarget || 0,
+                                    currentMatch.value.stats.corners || 0,
+                                    currentMatch.value.stats.fouls || 0,
+                                    currentMatch.value.stats.offsides || 0,
+                                    currentMatch.value.stats.possession || 0
+                                ],
+                                itemStyle: {
+                                    color: '#3498db'
+                                }
+                            },
+                            {
+                                name: currentMatch.value.awayTeam,
+                                type: 'bar',
+                                data: [
+                                    currentMatch.value.stats.awayShots || 0,
+                                    currentMatch.value.stats.awayShotsOnTarget || 0,
+                                    currentMatch.value.stats.awayCorners || 0,
+                                    currentMatch.value.stats.awayFouls || 0,
+                                    currentMatch.value.stats.awayOffsides || 0,
+                                    100 - (currentMatch.value.stats.possession || 0)
+                                ],
+                                itemStyle: {
+                                    color: '#e74c3c'
+                                }
+                            }
+                        ]
+                    };
+                    
+                    statsChart.setOption(option);
+                    
+                    // 響應式調整
+                    window.addEventListener('resize', function() {
+                        statsChart.resize();
                     });
                 };
 
@@ -758,6 +1065,13 @@
                         }
                         const data = await response.json();
                         currentMatch.value = data;
+                        
+                        // 如果切換到統計選項卡，初始化圖表
+                        if (currentTab.value === 'stats') {
+                            nextTick(() => {
+                                setTimeout(initStatsChart, 100);
+                            });
+                        }
                     } catch (error) {
                         console.error('獲取比賽詳情失敗:', error);
                     } finally {
@@ -772,7 +1086,12 @@
 
                 // 按聯賽過濾
                 const filterByLeague = (league) => {
-                    console.log('過濾聯賽:', league);
+                    selectedLeague.value = league;
+                    if (league) {
+                        filteredLeagues.value = leagues.value.filter(l => l.name === league);
+                    } else {
+                        filteredLeagues.value = [...leagues.value];
+                    }
                 };
 
                 // 按聯賽名稱分組
@@ -780,67 +1099,56 @@
                     const grouped = {};
                     matches.forEach(match => {
                         if (!grouped[match.league]) {
-                            grouped[match.league] = [];
+                            grouped[match.league] = {
+                                id: match.leagueId,
+                                name: match.league,
+                                matches: []
+                            };
                         }
-                        grouped[match.league].push(match);
+                        grouped[match.league].matches.push(match);
                     });
-                    return grouped;
-                };
-
-                // 更新最後更新時間
-                const updateLastUpdatedTime = () => {
-                    lastUpdated.value = new Date().toLocaleTimeString('zh-TW');
+                    
+                    return Object.values(grouped);
                 };
 
                 // 獲取比賽數據
-                const fetchMatchData = async () => {
+                const fetchMatches = async () => {
                     try {
+                        connectionStatus.value = 'connecting';
                         const response = await fetch('/.netlify/functions/getMatches');
                         if (!response.ok) {
-                            throw new Error('網絡請求失敗');
+                            throw new Error('獲取數據失敗');
                         }
-                        const matchData = await response.json();
-
-                        const groupedData = groupMatchesByLeague(matchData);
-                        leagues.value = Object.keys(groupedData).map(leagueName => ({
-                            id: leagueName,
-                            name: leagueName,
-                            matches: groupedData[leagueName]
-                        }));
-
-                        updateLastUpdatedTime();
+                        const data = await response.json();
+                        
+                        leagues.value = groupMatchesByLeague(data.matches);
+                        filteredLeagues.value = selectedLeague.value 
+                            ? leagues.value.filter(l => l.name === selectedLeague.value)
+                            : [...leagues.value];
+                        
+                        lastUpdated.value = new Date().toLocaleTimeString('zh-TW');
                         connectionStatus.value = 'connected';
-                    } catch (error) {
-                        console.error('獲取數據失敗:', error);
-                        connectionStatus.value = 'connected';
-                    } finally {
                         isLoading.value = false;
+                    } catch (error) {
+                        console.error('獲取比賽數據失敗:', error);
+                        connectionStatus.value = 'disconnected';
                     }
-                };
-
-                // 設置輪詢更新
-                const setupPolling = () => {
-                    console.log('啟用輪詢更新機制');
-                    connectionStatus.value = 'connecting';
-                    
-                    // 立即獲取一次數據
-                    fetchMatchData();
-                    
-                    // 設置定時輪詢
-                    pollInterval = setInterval(fetchMatchData, 10000);
                 };
 
                 // 初始化
                 onMounted(() => {
                     window.addEventListener('hashchange', handleHashChange);
-                    handleHashChange();
                     
-                    // 如果當前在詳情頁，加載數據
+                    // 初始獲取數據
+                    fetchMatches();
+                    
+                    // 設置輪詢
+                    pollInterval = setInterval(fetchMatches, 10000);
+                    
+                    // 如果當前在詳情頁，載入詳情
                     if (getMatchIdFromRoute.value) {
                         fetchMatchDetails(getMatchIdFromRoute.value);
                     }
-                    
-                    setupPolling();
                 });
 
                 // 清理
@@ -849,11 +1157,35 @@
                     if (pollInterval) {
                         clearInterval(pollInterval);
                     }
+                    if (statsChart) {
+                        statsChart.dispose();
+                    }
+                });
+
+                // 監聽路由變化
+                watch(currentRoute, (newRoute) => {
+                    if (newRoute.startsWith('/match/')) {
+                        const matchId = newRoute.split('/')[2];
+                        fetchMatchDetails(matchId);
+                    } else {
+                        currentMatch.value = null;
+                        currentTab.value = 'events';
+                    }
+                });
+
+                // 監聽選項卡變化
+                watch(currentTab, (newTab) => {
+                    if (newTab === 'stats' && currentMatch.value) {
+                        nextTick(() => {
+                            setTimeout(initStatsChart, 100);
+                        });
+                    }
                 });
 
                 return {
                     currentDate,
                     leagues,
+                    filteredLeagues,
                     isLoading,
                     connectionStatus,
                     lastUpdated,
@@ -865,7 +1197,9 @@
                     viewMatchDetails,
                     filterByLeague,
                     getStatusText,
-                    formatDate
+                    getEventTypeText,
+                    formatDate,
+                    formatDateShort
                 };
             }
         }).mount('#app');
